@@ -1,47 +1,62 @@
 # read file
-results = []
-with open('t.csv', 'r') as f:
-	next(f)
-	for line in f:
-		words = line.split(',')
-		results.append(words)
+def read_csv(filename):
+	results = []
+	with open(filename, 'r') as f:
+		next(f) # skip header
+		for line in f:
+			words = line.strip().split(',')
+			results.append(words)
+	return results
 
-# insert
-newResults = []
-csvFile = open("t.csv", "a")
-newArray = []
-newArray.append("\n3,")
-newArray.append("Joshua,")
-newArray.append("California")
-csvFile.writelines(newArray)
-csvFile.close()
+# insert new row
+def insert_row(filename, values):
+	with open(filename, "a") as f:
+		f.write(f"\n{','.join(str(val) for val in values)}")
 
 # update file
-updatedResults = []
-with open('t.csv', 'r') as f:
-	next(f)
-	for line in f:
-		words = line.split(',')
-		updatedResults.append(words)
+def update_csv(filename, updated_data, headers):
+	with open(filename, "w") as f:
+		# write headers
+		f.write(','.join(headers))
 
-updatedResults[0][1] = "Kaja"
+		for row in updated_data:
+			f.write(f"\n{','.join(str(val) for val in row)}")
 
-csvFile = open("t.csv", "w")
-csvFile.writelines(['SN,','Name,','City\n'])
-for result in updatedResults:
-	updating = []
-	updating.append(f"{result[0]},")
-	updating.append(f"{result[1]},")
-	updating.append(f"{result[2]}")
-	print(updating)
-	csvFile.writelines(updating)
-csvFile.close()
+# delete row
+def delete_row(filename, condition_func):
+	# read all content
+	with open(filename, "r") as f:
+		lines = f.readlines()
+		header = lines[0]
 
-# delete
-with open("t.csv", "r") as f:
-	lines = f.readlines()
-	
-	with open("t.csv", "w") as f:
-		for line in lines:
-			if line.find("3") == -1:
+	# write back filtered content
+	with open(filename, "w") as f:
+		f.write(header)
+		for line in lines[1:]:
+			row = line.strip().split(',')
+			if not condition_func(row):
 				f.write(line)
+
+if __name__ == "__main__":
+	filename = 't.csv'
+
+	# Read
+	results = read_csv(filename)
+	print(f"Read results: {results}")
+
+	# Insert
+	insert_row(filename, [3, "Joshua", "California"])
+	results = read_csv(filename)
+	print(f"Row inserted: {results}")
+
+	# Update
+	results = read_csv(filename)
+	if results:
+		results[0][1] = "Kaja"
+	update_csv(filename, results, ["SN", "Name", "City"])
+	print(f"File update: {results}")
+
+	# Delete
+	delete_row(filename, lambda row: row[0] == '3')
+	results = read_csv(filename)
+	print(f"Row deleted: {results}")
